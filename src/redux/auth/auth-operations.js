@@ -3,6 +3,7 @@ import authActions from './auth-actions';
 
 axios.defaults.baseURL = 'https://lpj-tasker.herokuapp.com';
 
+//когда логинимся, в хедер ставим наш токен, когда разлогин, снимаем
 const token = {
   set(token) {
     axios.defaults.headers.common.Authorization = `Bearer ${token}`;
@@ -23,6 +24,7 @@ const register = credentials => async dispatch => {
   try {
     const response = await axios.post('/users/signup', credentials);
 
+    token.set(response.data.token);
     dispatch(authActions.registerSuccess(response.data));
   } catch (error) {
     dispatch(authActions.registerError(error.message));
@@ -40,8 +42,9 @@ const logIn = credentials => async dispatch => {
   dispatch(authActions.loginRequest());
 
   try {
-    const response = await axios.get('/users/login', credentials);
-
+    const response = await axios.post('/users/login', credentials);
+    token.set(response.data.token);
+    console.log(response.data);
     dispatch(authActions.loginSuccess(response.data));
   } catch (error) {
     dispatch(authActions.loginError(error.message));
@@ -55,7 +58,17 @@ const logIn = credentials => async dispatch => {
  *
  * 1. После успешного логаута, удаляем токен из HTTP-заголовка
  */
-const logOut = () => async dispatch => {};
+const logOut = () => async dispatch => {
+  dispatch(authActions.logoutRequest());
+  try {
+    await axios.post('/users/logout');
+
+    token.unset();
+    dispatch(authActions.logoutSuccess());
+  } catch (error) {
+    dispatch(authActions.logoutError(error.message));
+  }
+};
 
 /*
  * GET @ /users/current
@@ -66,6 +79,33 @@ const logOut = () => async dispatch => {};
  * 2. Если токена нет, выходим не выполняя никаких операций
  * 3. Если токен есть, добавляет его в HTTP-заголовок и выполянем операцию
  */
-const getCurrentUser = () => (dispatch, getState) => {};
+
+//TODO: вместе с диспатч, приходит еще getState в котором лежит редакс стейт
+//Юзаем этот метод в App.js
+const getCurrentUser = () => async (dispatch, getState) => {
+  //вытягиваем со стейта токен
+  const {
+    auth: { token: persistedToken },
+  } = getState();
+
+  //если токена нету, ничего не делаем,
+  if (!persistedToken) {
+    return;
+  }
+  //по другому если написать const {state.auth.token} = getState()
+
+  //если токен есть то сетим токен
+  token.set(persistedToken);
+
+  dispatch(authActions.getCurrentUserRequest());
+  try {
+    const response = await axios.get('/users/current');
+
+    dispatch(authActions.getCurrentUserSuccess(response.data));
+    //если все ок, вернет Юзера но БЕЗ ТОКЕНА
+  } catch (error) {
+    dispatch(authActions.getCurrentUserError(error.message));
+  }
+};
 
 export default { register, logOut, logIn, getCurrentUser };

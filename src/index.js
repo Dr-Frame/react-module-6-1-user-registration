@@ -11,11 +11,11 @@ import './styles/base.scss';
 ReactDOM.render(
   <React.StrictMode>
     <Provider store={store.store}>
-      {/* <PersistGate loading={null} persistor={store.persistor}> */}
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-      {/* </PersistGate> */}
+      <PersistGate loading={null} persistor={store.persistor}>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </PersistGate>
     </Provider>
   </React.StrictMode>,
   document.getElementById('root'),

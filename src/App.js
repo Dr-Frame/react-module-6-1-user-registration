@@ -10,10 +10,9 @@ import { authOperations } from './redux/auth';
 import { connect } from 'react-redux';
 
 class App extends Component {
-  /* componentDidMount() {
-    console.log('app');
+  componentDidMount() {
     this.props.onGetCurretnUser();
-  } */
+  }
 
   render() {
     return (
@@ -30,5 +29,8 @@ class App extends Component {
     );
   }
 }
+const mapDispatchToProps = {
+  onGetCurretnUser: authOperations.getCurrentUser,
+};
 
-export default App;
+export default connect(null, mapDispatchToProps)(App);
